@@ -1,0 +1,21 @@
+{
+  "name": "izi",
+  "version": "1.0.1",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "Clément Denis <clement@payname.fr>",
+  "license": "ISC",
+  "dependencies": {
+    "global": "^4.3.0",
+    "performance-now": "^0.2.0",
+    "raf": "^3.2.0"
+  },
+  "devDependencies": {
+    "ava": "^0.15.2",
+    "test-mirror": "^1.1.1-3"
+  }
+}

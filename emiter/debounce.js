@@ -1,0 +1,4 @@
+const debounce = require('../debounce')
+
+module.exports = (setter, emiter, delta, imediate) =>
+  emiter(debounce(setter, delta, imediate))

@@ -1,0 +1,1 @@
+module.exports = require('../../collection/util/iter').test
