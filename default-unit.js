@@ -8,10 +8,10 @@
  *
  * @providesModule CSSProperty
  */
-const store = require('lib/store');
-const each = require('lib/collection/each');
-const is = require('lib/is');
-const capitalize = require('lib/str').capitalize;
+const store = require('./store');
+const each = require('./collection/each');
+const is = require('./is');
+const capitalize = require('./str').capitalize;
 const prefixes = ['Webkit', 'ms', 'Moz', 'O', ''];
 /**
  * CSS properties which accept numbers but are not in units of "px".
