@@ -11,11 +11,11 @@
   "license": "ISC",
   "dependencies": {
     "global": "^4.3.0",
-    "performance-now": "^0.2.0",
+    "performance-now": "^2.0.0",
     "raf": "^3.2.0"
   },
   "devDependencies": {
-    "ava": "^0.15.2",
+    "ava": "^0.17.0",
     "test-mirror": "^1.1.1-3"
   }
 }
