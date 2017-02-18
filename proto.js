@@ -1,6 +1,8 @@
-const window = require('global/window')
+const window = require('global/window') || global
+const store = require('./collection/store')
+const filter = require('./collection/filter')
 const bindProto = require('./internal/bind-proto')
-const toASCII = c => String.charCodeAt.call(c, 0)
+const toASCII = c => c.charCodeAt(0)
 const LAST_UPPERCASE_LETTER = toASCII('Z')
 
 const storeBindedProto = store(bindProto)

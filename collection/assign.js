@@ -7,6 +7,3 @@ const assign = store((src, obj) => isArr(obj)
   : clone(obj, src))
 
 module.exports = (src, ...objs) => assign(objs, src)
-
-
-// collissimo 8K01656466332

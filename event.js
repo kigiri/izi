@@ -73,20 +73,6 @@ const updateDom = () => {
 
 const clearButtons = () => mouseState.m = mouseState.r = mouseState.l = false
 
-window.addEventListener('mousedown',
-  event => mouseState[mouseKeys[event.which]] = true)
-window.addEventListener('mouseup',
-  event => mouseState[mouseKeys[event.which]] = false)
-
-window.addEventListener('mousemove', event => {
-  mouseState.x = event.pageX
-  mouseState.y = event.pageY
-  mouseState.hover = event.target
-  if (!event.which) {
-    clearButtons()
-  }
-})
-
 const fullState = {
   scrollTop,
   scrollBottom,
@@ -103,7 +89,23 @@ const fullState = {
   viewHeight: linker(() => window.innerHeight),
 }
 
-updateDom()
-loop(updateDom)
+if (window.addEventListener) {
+  window.addEventListener('mousedown',
+    event => mouseState[mouseKeys[event.which]] = true)
+  window.addEventListener('mouseup',
+    event => mouseState[mouseKeys[event.which]] = false)
+
+  window.addEventListener('mousemove', event => {
+    mouseState.x = event.pageX
+    mouseState.y = event.pageY
+    mouseState.hover = event.target
+    if (!event.which) {
+      clearButtons()
+    }
+  })
+  updateDom()
+  loop(updateDom)
+}
+
 
 module.exports = fullState

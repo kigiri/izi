@@ -1,6 +1,6 @@
-const each = require('lib/each');
+const each = require('./collection/each')
 
 module.exports = (proto, state) => {
-  each(key => state[key] = (...args) => proto[key](state, ...args), proto);
-  return state;
+  each(key => state[key] = proto[key].bind(null, state), proto)
+  return state
 }

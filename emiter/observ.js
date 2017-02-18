@@ -55,7 +55,7 @@ const buildMethod = method => (...args) => {
   return obs
 }
 
-each((fn, key) => Observ[key] = buildMethod(fn), methods);
+each((fn, key) => Observ[key] = buildMethod(fn), methods)
 
 const immediate = (obs, fn) => {
   fn(obs())

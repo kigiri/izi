@@ -1,6 +1,6 @@
-const is = require('lib/is')
-const each = require('lib/collection/each')
-const assign = require('lib/assign-deep')
+const is = require('./is')
+const each = require('./collection/each')
+const merge = require('./collection/merge')
 
 const VNode = require('virtual-dom/vnode/vnode')
 const VText = require('virtual-dom/vnode/vtext')
@@ -9,7 +9,7 @@ const parseTag = require('virtual-dom/virtual-hyperscript/parse-tag')
 const softSetHook = require('virtual-dom/virtual-hyperscript/hooks/soft-set-hook')
 const evHook = require('virtual-dom/virtual-hyperscript/hooks/ev-hook')
 
-const pixelize = require('lib/default-unit')
+const pixelize = require('./default-unit')
 
 const transformProperties = each((value, propName, props) => {
   if (!is.hook(value) && /^ev[-A-Z]/.test(propName)) {
@@ -117,7 +117,7 @@ function parseCurryArgs(args, props, children) {
       if (props.className && args.props.className) {
         props.className = props.className +' '+ args.props.className
       }
-      args.props = assign({}, args.props, props)
+      args.props = merge({}, args.props, props)
     }
   }
   return args

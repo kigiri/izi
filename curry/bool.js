@@ -1,6 +1,6 @@
-const every = require('./collection/every')
-const none = require('./collection/none')
-const any = require('./collection/any')
+const every = require('../collection/every')
+const none = require('../collection/none')
+const any = require('../collection/any')
 
 const not = fn => (...args) => !fn(...args);
 

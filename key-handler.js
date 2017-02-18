@@ -1,4 +1,4 @@
-const is = require('lib/is')
+const { isFn } = require('./is')
 
 const regular = {
   8: 'backspace',
@@ -49,24 +49,25 @@ const shifted = {
 const getAlias = (ev, which) => (ev.shiftKey ? shifted : regular)[which]
   || String.fromCharCode(which)
 
-
-// TODO: find the best match instead of the first and
 const applyMod = (ev, prev, fn) => fn
   ? applyMod(ev, fn, (ev.ctrlKey && fn.ctrl)
-  || (ev.metaKey && fn.meta)
-  || (ev.altKey && fn.alt)
-  || (ev.shiftKey && fn.shift)
-  || fn.none)
+    || (ev.shiftKey && fn.shift)
+    || (ev.metaKey && fn.meta)
+    || (ev.altKey && fn.alt)
+    || fn.none)
   : prev
 
-module.exports = (handlers, fallback) => ev => {
-  let fn = handlers[ev.alias = getAlias(ev, ev.which)] || handlers[ev.which]
+module.exports = (handlers, fallback) => {
+  return ev => {
+    let fn = handlers[ev.key.toLowerCase()]
+      || handlers[getAlias(ev, ev.which)]
 
-  if (!fn && fallback) return fallback(ev)
+    if (!fn && fallback) return fallback(ev)
 
-  fn = applyMod(ev, fn, fn)
+    fn = applyMod(ev, fn, fn)
 
-  if (is.fn(fn)) {
-    if (fn(ev) !== false) ev.preventDefault()
+    if (isFn(fn)) {
+      if (fn(ev) !== false) ev.preventDefault()
+    } else return fallback(ev)
   }
 }

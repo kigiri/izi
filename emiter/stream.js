@@ -1,4 +1,5 @@
 const methods = require('./methods')
+const each = require('../collection/each')
 
 const notAFunction = () => Error('Uncaught TypeError: executor is not a function')
 

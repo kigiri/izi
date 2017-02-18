@@ -1,5 +1,5 @@
-const each = require('./collection/each')
-const tests = require('./str').tests
+const each = require('../collection/each')
+const tests = require('../str').tests
 
 // expand selection for chartype, either whiteSpace or contiunious word
 const getTest = (next, prev) => {
@@ -14,7 +14,7 @@ const getTest = (next, prev) => {
     return tests.whiteSpace
   }
   if (tests.wordStop(curr)) {
-    return tests.not.wordStop.
+    return tests.not.wordStop
   }
   return tests.wordStop
 }

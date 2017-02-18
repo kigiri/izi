@@ -1,5 +1,5 @@
-const observ = require('lib/emiter/observ')
-const each = require('lib/collection/each')
+const observ = require('./emiter/observ')
+const each = require('./collection/each')
 
 function join(events) {
   const data = {}

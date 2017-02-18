@@ -1,14 +1,15 @@
-const map = require('./map');
+const map = require('./collection/map')
+const S = require('./proto').String
 
 // str utils
-const firstLetter = /^./;
+const firstLetter = /^./
 const charFollowingDelimitors = /([-_. ]+.)/
-const consecutiveSpaces = /\s\s/;
-const whiteSpace = /\s/;
-const wordStop = /[^A-Za-z-_]/;
-const reLatin1 = /[\xc0-\xd6\xd8-\xde\xdf-\xf6\xf8-\xff]/g;
-const reComboMark = /[\u0300-\u036f\ufe20-\ufe23]/g;
-const toUpper = str => str.toUpperCase();
+const consecutiveSpaces = /\s\s/
+const whiteSpace = /\s/
+const wordStop = /[^A-Za-z-_]/
+const reLatin1 = /[\xc0-\xd6\xd8-\xde\xdf-\xf6\xf8-\xff]/g
+const reComboMark = /[\u0300-\u036f\ufe20-\ufe23]/g
+const toUpper = str => str.toUpperCase()
 const deburredLetters = {
   '\xc0': 'A',  '\xc1': 'A', '\xc2': 'A', '\xc3': 'A', '\xc4': 'A', '\xc5': 'A',
   '\xe0': 'a',  '\xe1': 'a', '\xe2': 'a', '\xe3': 'a', '\xe4': 'a', '\xe5': 'a',
@@ -26,12 +27,12 @@ const deburredLetters = {
   '\xdd': 'Y',  '\xfd': 'y', '\xff': 'y',
   '\xc6': 'Ae', '\xe6': 'ae',
   '\xde': 'Th', '\xfe': 'th',
-  '\xdf': 'ss'
-};
+  '\xdf': 'ss',
+}
 
-const deburrLetter = letter => deburredLetters[letter];
+const deburrLetter = letter => deburredLetters[letter]
 const deburr = str => str.replace(reLatin1, deburrLetter)
-  .replace(reComboMark, '');
+  .replace(reComboMark, '')
 
 const matches = {
   firstLetter,
@@ -41,10 +42,10 @@ const matches = {
   wordStop,
   reLatin1,
   reComboMark,
-};
+}
 
-const tests = map(matches, match => str => match.test(str));
-tests.not = map(tests, test => str => !test(str));
+const tests = map(match => str => match.test(str), matches)
+tests.not = map(test => str => !test(str), tests)
 
 module.exports = {
   tests,

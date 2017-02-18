@@ -14,11 +14,11 @@ var features = {
   // Binary and octal numeric literals
 };
 
-var unsupported = [];
+var unsupported = []
 
 Object.keys(features).forEach(function (key) {
   try { eval(features[key]) } // eslint-disable-line
   catch (err) { unsupported.push(key) }
 })
 
-export default unsupported;
+module.exports = unsupported
