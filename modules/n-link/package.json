@@ -1,0 +1,36 @@
+{
+  "name": "bc-link",
+  "version": "1.0.1",
+  "description": "Slap some Promises arround the HTTP module and a hint of Parkour : You get Link, the best operator for your ship.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node --use_strict --harmony index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@becoast.fr:bc/bc-link.git"
+  },
+  "author": {
+    "name": "Clement Denis",
+    "email": "cdenis@becoast.fr",
+    "url": "https://becoast.fr"
+  },
+  "license": "ISC",
+  "dependencies": {
+    "bc-parkour": "^1.1.1"
+  },
+  "gitHead": "8aba8581f366f0e2fc850e3e37fc55827a111cf4",
+  "_id": "bc-link@1.0.1",
+  "_shasum": "815ae083339c8b123d8b9291bf6a3594f1a9f39d",
+  "_from": "bc-link@*",
+  "_npmVersion": "2.11.3",
+  "_nodeVersion": "0.12.7",
+  "_npmUser": {},
+  "dist": {
+    "shasum": "815ae083339c8b123d8b9291bf6a3594f1a9f39d",
+    "tarball": "http://becoast.fr:4873/bc-link/-/bc-link-1.0.1.tgz"
+  },
+  "_resolved": "http://becoast.fr:4873/bc-link/-/bc-link-1.0.1.tgz",
+  "readme": "ERROR: No README data found!"
+}
