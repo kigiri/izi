@@ -1,5 +1,5 @@
 const deburr = require('lodash/deburr')
-const is = require('izi/is')
+const is = require('./is')
 const rgx = require('./rgx')
 const i18n = require('../i18n')
 

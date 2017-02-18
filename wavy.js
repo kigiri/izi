@@ -1,6 +1,6 @@
 const { symlink, realpath } = require('./mz')('fs')
 const path = require('path')
-const map = require('izi/collection/map')
+const map = require('./collection/map')
 const root = path.resolve(__dirname, '../')
   // = dirname.slice(0, dirname.lastIndexOf('/node_modules/'));
 

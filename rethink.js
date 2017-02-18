@@ -1,6 +1,6 @@
 const range = require('lodash/range')
 const unshift = require('./proto').Array.unshift
-const { isFn, isObj } = require('izi/is')
+const { isFn, isObj } = require('./is')
 const insanityLevel = 8
 
 // that = fn => (...args) => fn(this, ...args)

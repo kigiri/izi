@@ -1,4 +1,4 @@
-const Ev = require('izi/emiter/event')
+const Ev = require('./emiter/event')
 const window = require('global/window')
 const initWeso = require('./weso')
 

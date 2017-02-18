@@ -1,8 +1,8 @@
 const loop = require('../lib/loop')
 const queryString = require('../lib/query-string')
-const each = require('izi/collection/each')
+const each = require('./collection/each')
 const clamp = require('lodash/clamp')
-const observ = require('izi/emiter/observ')
+const observ = require('./emiter/observ')
 const isPrimitive = require('./is-primitive')
 
 // set default state values

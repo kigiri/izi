@@ -1,6 +1,6 @@
 const H = Object.create.bind(Object, null)
-const reduce = require('izi/collection/reduce')
-const each = require('izi/collection/each')
+const reduce = require('./collection/reduce')
+const each = require('./collection/each')
 const removeTrailingSlash = str => str[str.length - 1] === '/'
   ? str.slice(0, -1)
   : str

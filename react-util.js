@@ -1,6 +1,6 @@
 const css = require('next/css').default
 const { extend, spread2 } = require('./rethink')
-const { isFn, isStr, isObj } = require('izi/is')
+const { isFn, isStr, isObj } = require('./is')
 const rgx = require('./rgx')
 const htmlTags = require('./html-tags')
 const spread = require('lodash/spread')

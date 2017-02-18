@@ -1,4 +1,4 @@
-const each = require('izi/collection/each')
+const each = require('./collection/each')
 const toDate = require('./izi-date')
 const extractArgs = val => Array.from(new Set(val.match(/(\$[0-9])/g)))
 const toGetter = val => () => val

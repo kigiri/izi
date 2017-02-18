@@ -1,4 +1,4 @@
-const reduce = require('izi/collection/reduce')
+const reduce = require('./collection/reduce')
 const missingWord = [ 'missing', 'manquant' ]
 
 const missingValue = (val, i) => `${val} ${missingWord[i]}`

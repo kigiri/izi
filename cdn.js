@@ -1,4 +1,4 @@
-const map = require('izi/collection/map')
+const map = require('./collection/map')
 const { js } = require('./inject')
 const cdnBaseUrl = 'https://cdnjs.cloudflare.com/ajax/libs'
 const cdn = {}

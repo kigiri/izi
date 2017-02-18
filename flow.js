@@ -1,6 +1,6 @@
 const flatten = require('./flatten')
-const filter = require('izi/collection/filter')
-const map = require('izi/collection/map')
+const filter = require('./collection/filter')
+const map = require('./collection/map')
 
 const isFn = fn => typeof fn === 'function'
 const thennable = val => val && isFn(val.then)

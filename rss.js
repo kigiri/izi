@@ -1,4 +1,4 @@
-const event = require('izi/emiter/event')
+const event = require('./emiter/event')
 const parkour = require('./parkour')
 
 module.exports = ({ id, url, selector, refreshRate = 900 }) => {

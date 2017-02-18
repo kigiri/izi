@@ -1,6 +1,6 @@
 // ABORD ALL HOPES
 
-const { isFn } = require('izi/is')
+const { isFn } = require('./is')
 
 const delayer = timeout => {
   let _t, _r

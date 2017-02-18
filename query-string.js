@@ -1,4 +1,4 @@
-const reduce = require('izi/collection/reduce')
+const reduce = require('./collection/reduce')
 
 const build = reduce((ret, param) => {
   const spaced = param.replace(/\+/g, ' ')

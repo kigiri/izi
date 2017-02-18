@@ -1,4 +1,4 @@
-const Ev = require('izi/emiter/event')
+const Ev = require('./emiter/event')
 const fs = require('fs')
 const signature = require('cookie-signature')
 const cookie = require('cookie')

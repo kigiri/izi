@@ -1,7 +1,7 @@
-const each = require('izi/collection/each')
+const each = require('./collection/each')
 const merge = require('lodash/merge')
-const methods = require('izi/emiter/methods')
-const remove = require('izi/arr').remove
+const methods = require('./emiter/methods')
+const remove = require('./arr').remove
 
 const noOp = _ => _
 module.exports = (id, map=noOp) => {

@@ -1,5 +1,5 @@
 'use strict'
-const Ev = require('izi/emiter/event')
+const Ev = require('./emiter/event')
 /*
 const through = require('through2')
 const streamCheck = stream => stream.pipe && stream.on

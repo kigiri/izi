@@ -1,4 +1,4 @@
-const observ = require('izi/emiter/observ')
+const observ = require('./emiter/observ')
 const loc = window.location
 const parseRoute = () => loc.hash.split('?')[0].slice(2)
 const route = observ.check(parseRoute())
