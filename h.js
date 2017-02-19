@@ -1,154 +1,155 @@
-const is = require('./is')
-const each = require('./collection/each')
-const merge = require('./collection/merge')
+const { isFn, isStr, isObj } = require('izi/is')
+const htmlTags = require('./html-tags')
+const equal = require('izi/collection/equal')
+const each = require('izi/collection/each')
+const map = require('izi/collection/map')
+const parseTag = require('./parse-tag')
+const createElement = require('inferno-create-element')
+const render = require('inferno').render
+const noOp = () => {}
 
-const VNode = require('virtual-dom/vnode/vnode')
-const VText = require('virtual-dom/vnode/vtext')
-
-const parseTag = require('virtual-dom/virtual-hyperscript/parse-tag')
-const softSetHook = require('virtual-dom/virtual-hyperscript/hooks/soft-set-hook')
-const evHook = require('virtual-dom/virtual-hyperscript/hooks/ev-hook')
-
-const pixelize = require('./default-unit')
-
-const transformProperties = each((value, propName, props) => {
-  if (!is.hook(value) && /^ev[-A-Z]/.test(propName)) {
-    props[propName] = evHook(value)
+const isChildren = child => {
+  if (!child) return false
+  switch (child.constructor) {
+    case String:
+    case Function:
+    case Array: return true
+    default: return child.flags
   }
+}
+
+const isPrimitive = prim => {
+  if (prim === null) return false
+  switch (prim.constructor) {
+    case String:
+    case Number:
+    case Boolean: return true
+    default: return false
+  }
+}
+
+const getTagAndParseProps = (cssPath, props) => isStr(cssPath)
+  ? parseTag(cssPath, props).toLowerCase()
+  : cssPath
+
+const mergePropsBody = map.toArr((value, key) => {
+  if (value === undefined) return ''
+  const k = JSON.stringify(key)
+  const v = isPrimitive(value) ? JSON.stringify(value) : `base[${k}]`
+
+  return `props[${k}] === undefined && (props[${k}] = ${v});\n`
 })
 
-function parseArgs(cssPath, props, children) {
-  if (!children && is.children(props)) {
-    return {
-      children: props,
-      props: {}
-    }
+const mergeProps = props => Function(['props', 'base'],
+  `${mergePropsBody(props).join('')}return props`)
+
+const fastCloneBody = map.toArr((value, key) => {
+  if (value === undefined) return ''
+  const k = JSON.stringify(key)
+  const v = isPrimitive(value) ? JSON.stringify(value) : `base[${k}]`
+
+  return `  ${k}: ${v},\n`
+})
+
+const fastClone = props => Function(['base'],
+  `return {\n${fastCloneBody(props).join('')}}`)
+
+const getClassAppender = className => {
+  const appClass = ' '+ className
+  return className
+    ? (props => props.className && (props.className += appClass))
+    : noOp
+}
+const tagCache = Object.create(null)
+
+const inCache = (tag, props) => {
+  const cache = tagCache[tag]
+  if (!cache) return
+  for (let [create, test] of cache) {
+    if (test(props)) return create
   }
-  const parsedArgs = { children }
+}
 
-  if (props) {
-    if (props.key) {
-      parsedArgs.key = props.key
-      props.key = undefined
-    }
+const setCache = (tag, props, create) =>
+  (tagCache[tag] || (tagCache[tag] = new Map()))
+    .set(create, equal(props))
 
-    if (props.namespace) {
-      parsedArgs.namespace = props.namespace
-      props.namespace = undefined
-    } else if (isInputWithValue(cssPath, props)) {
-      props.value = softSetHook(props.value)
-    }
+const prepareArgs = (tagName, props) => {
+  if (isObj(tagName)) {
+    props = tagName
+    tagName = 'div'
+  }
+
+  if (!isObj(props)) {
+    props = Object.create(null)
+  }
+
+  const tag = getTagAndParseProps(tagName, props)
+
+  return { tag, props }
+}
+
+const h = (t, p) => {
+  const { tag, props: baseProps } = prepareArgs(t, p)
+  const cacheHit = inCache(tag, baseProps)
+  if (cacheHit) return cacheHit
+
+  let merge, clone, appendCssClass
+
+  if (!Object.keys(baseProps).length) {
+    merge = clone = Object
+    appendCssClass = noOp
   } else {
-    props = {}
-  }
-  parsedArgs.tag = parseTag(cssPath, props)
-  parsedArgs.props = props
-
-  return parsedArgs
-}
-
-const isInputWithValue = (tag, props) => tag === 'INPUT'
-  && props.hasOwnProperty('value')
-  && props.value !== undefined
-  && !is.hook(props.value)
-
-function buildVnode(tag, props, children, key, namespace) {
-  const childNodes = []
-
-  if (props.style) {
-    pixelize(props.style)
+    merge = mergeProps(baseProps)
+    clone = fastClone(baseProps)
+    appendCssClass = getClassAppender(baseProps.className)
   }
 
-  transformProperties(props)
-  addChild(children, childNodes, tag, props)
-
-  return new VNode(tag, props, childNodes, key, namespace)
-}
-
-function addChild(c, childNodes, tag, props) {
-  if (c === undefined || c === null) return
-  if (is.str(c)) {
-    childNodes.push(new VText(c))
-  } else if (typeof c === 'number') {
-    childNodes.push(new VText(String(c)))
-  } else if (is.child(c)) {
-    childNodes.push(c)
-  } else if (is.arr(c)) {
-    each(child => addChild(child, childNodes, tag, props), c)
-  } else {
-    throw UnexpectedVirtualElement({
-      foreignObject: c,
-      parentVnode: {
-        tagName: tag,
-        properties: props
-      }
-    })
-  }
-}
-
-function UnexpectedVirtualElement(data) {
-  const err = new Error('Unexpected virtual child passed to h().\n'
-    +'Expected a VNode / Vthunk / VWidget / string but:\n'
-    +'got:\n'+ errorString(data.foreignObject) +'.\n'
-    +'The parent vnode is:\n'+ errorString(data.parentVnode) +'\n'
-    +'Suggested fix: change your `h(..., [ ... ])` callsite.')
-
-  err.type = 'virtual-hyperscript.unexpected.virtual-element'
-  err.foreignObject = data.foreignObject
-  err.parentVnode = data.parentVnode
-
-  return err
-}
-
-function errorString(obj) {
-  try {
-    return JSON.stringify(obj, null, '    ')
-  } catch (e) {
-    return String(obj)
-  }
-}
-
-function parseCurryArgs(args, props, children) {
-  if (!children && is.children(props)) {
-    args.children = props
-  } else {
-    args.children = children
-    if (props) {
-      if (props.className && args.props.className) {
-        props.className = props.className +' '+ args.props.className
-      }
-      args.props = merge({}, args.props, props)
+  const create = (props, children) => {
+    if (!props) {
+      props = clone(baseProps)
+    } else if (isChildren(props)) {
+      children = props
+      props = clone(baseProps)
+    } else {
+      appendCssClass(props)
+      merge(props, baseProps)
     }
-  }
-  return args
-}
-
-const applyArgsToBuild = arg =>
-  buildVnode(arg.tag, arg.props, arg.children, arg.key, arg.namespace, arg)
-
-const h = (tagName, properties, children) =>
-  applyArgsToBuild(parseArgs(tagName, properties, children))
-
-h.build = buildVnode
-h.curry = (tagName, properties) => {
-  let tag
-  let props
-
-  if (is.str(tagName)) {
-    const args = parseArgs(tagName, properties)
-    tag = args.tag;
-    props = args.props || {}
-  } else {
-    tag = 'DIV'
-    props = tagName || {}
+    return createElement(tag, props, children)
   }
 
-  const curryfied = (newProps, children) => 
-    applyArgsToBuild(parseCurryArgs({ tag, props }, newProps, children))
+  create.style = (style, children) => {
+    const props = clone(baseProps)
+    props.style = style
+    return createElement(tag, props, children)
+  }
 
-  curryfied.style = (style, children) => curryfied({ style }, children)
+  create.extend = (t, p) => {
+    const { props } = prepareArgs(t, p)
 
-  return curryfied
+    appendCssClass(props)
+    merge(props, baseProps)
+
+    return h(tag, props)
+  }
+
+  setCache(tag, baseProps, create)
+
+  return create
 }
+
+const deprecated = [
+  'replaceState',
+  'isMounted',
+  'getDOMNode',
+  'replaceProps',
+  'setProps',
+]
+
+each(tag => h[tag] = h(tag), htmlTags)
+
+h.class = Object.create(null)
+h.h = h
+h.render = render
 
 module.exports = h
