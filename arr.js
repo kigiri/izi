@@ -6,6 +6,17 @@ module.exports = {
     arr.splice(idx, 1)
   },
   n: n => arr => arr[n],
+  shuffle: arr => {
+    let i = arr.length
+    let j, tmp
+    while (--i > 0) {
+      j = Math.floor(Math.random() * (i + 1))
+      tmp = arr[j]
+      arr[j] = arr[i]
+      arr[i] = tmp
+    }
+    return arr
+  },
   first: arr => arr[0],
   append: (arr, value) => arr ? (arr.push(value), arr) : [ value ],
   prepend: (arr, value) => arr ? (arr.unshift(value), arr) : [ value ],

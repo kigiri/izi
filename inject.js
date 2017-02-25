@@ -1,27 +1,37 @@
-function checkPresence(url) {
-  return reduce(document.body.getElementsByTagName('script'), (skip, script) =>
-    skip || script.getAttribute('src').indexOf(url) !== -1, false)
-}
+const reduce = require('./collection/reduce')
 
-const errorHanlder = (url, reject) => event => {
-  const err = new Error('Error loading script '+ url)
-  err.event = event
-  reject(err)
-}
+const loader = (urlKey, tag, typeKey, type) => {
+  const isHere = reduce((url, elem) =>
+    url && (elem[urlKey].indexOf(url) === -1 ? url : false))
 
-module.exports = url => {
-  if (checkPresence(url)) {
-    return promise.reject(new Error('script '+ url +' already injected'))
+  const checkPresence = url =>
+    isHere(document.body.getElementsByTagName(tag), url)
+
+  const errorHanlder = (url, reject) => event => {
+    const err = new Error(`Error loading ${type} `+ url)
+    err.event = event
+    reject(err)
   }
-  const script = document.createElement('script')
-  const p = new Promise((resolve, reject) => {
-    script.onerror = errorHanlder(url, reject)
-    script.onload = resolve
-  })
 
-  script.type = 'text/javascript'
-  script.src = url
-  document.body.appendChild(script)
+  return url => {
+    if (!checkPresence(url)) {
+      return Promise.reject(new Error(`${type} ${url} already injected`))
+    }
+    const elem = document.createElement(tag)
+    const p = new Promise((resolve, reject) => {
+      elem.onerror = errorHanlder(url, reject)
+      elem.onload = resolve
+    })
 
-  return p
+    elem[typeKey] = type
+    elem[urlKey] = url
+    document.body.appendChild(elem)
+
+    return p
+  }
+}
+
+module.exports = {
+  css: loader('href', 'link', 'rel', 'stylesheet'),
+  js: loader('src', 'script', 'type', 'text/javascript'),
 }

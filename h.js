@@ -1,8 +1,8 @@
-const { isFn, isStr, isObj } = require('izi/is')
+const { isStr, isObj, isPrimitive } = require('./is')
 const htmlTags = require('./html-tags')
-const equal = require('izi/collection/equal')
-const each = require('izi/collection/each')
-const map = require('izi/collection/map')
+const equal = require('./collection/equal')
+const each = require('./collection/each')
+const map = require('./collection/map')
 const parseTag = require('./parse-tag')
 const createElement = require('inferno-create-element')
 const render = require('inferno').render
@@ -15,16 +15,6 @@ const isChildren = child => {
     case Function:
     case Array: return true
     default: return child.flags
-  }
-}
-
-const isPrimitive = prim => {
-  if (prim === null) return false
-  switch (prim.constructor) {
-    case String:
-    case Number:
-    case Boolean: return true
-    default: return false
   }
 }
 
@@ -55,11 +45,21 @@ const fastClone = props => Function(['base'],
   `return {\n${fastCloneBody(props).join('')}}`)
 
 const getClassAppender = className => {
+  if (!className) return noOp
   const appClass = ' '+ className
-  return className
-    ? (props => props.className && (props.className += appClass))
-    : noOp
+  return (props => props.className && (props.className += appClass))
 }
+
+const getStyleMerger = style => {
+  if (!style) return noOp
+  const merge = mergeProps(style)
+  const clone = fastClone(style)
+
+  return props => props && (props.style
+    ? merge(props.style)
+    : (props.style = clone()))
+}
+
 const tagCache = Object.create(null)
 
 const inCache = (tag, props) => {
@@ -94,15 +94,17 @@ const h = (t, p) => {
   const cacheHit = inCache(tag, baseProps)
   if (cacheHit) return cacheHit
 
-  let merge, clone, appendCssClass
+  let merge, clone, appendCssClass, mergeStyle
 
   if (!Object.keys(baseProps).length) {
     merge = clone = Object
     appendCssClass = noOp
+    mergeStyle = noOp
   } else {
     merge = mergeProps(baseProps)
     clone = fastClone(baseProps)
     appendCssClass = getClassAppender(baseProps.className)
+    mergeStyle = getStyleMerger(baseProps.style)
   }
 
   const create = (props, children) => {
@@ -113,6 +115,7 @@ const h = (t, p) => {
       props = clone(baseProps)
     } else {
       appendCssClass(props)
+      mergeStyle(props)
       merge(props, baseProps)
     }
     return createElement(tag, props, children)
@@ -128,6 +131,7 @@ const h = (t, p) => {
     const { props } = prepareArgs(t, p)
 
     appendCssClass(props)
+    mergeStyle(props)
     merge(props, baseProps)
 
     return h(tag, props)
@@ -137,14 +141,6 @@ const h = (t, p) => {
 
   return create
 }
-
-const deprecated = [
-  'replaceState',
-  'isMounted',
-  'getDOMNode',
-  'replaceProps',
-  'setProps',
-]
 
 each(tag => h[tag] = h(tag), htmlTags)
 
