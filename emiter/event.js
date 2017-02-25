@@ -18,6 +18,6 @@ const buildMethod = method => (...args) => {
   return ev
 }
 
-each((fn, key) => Event[key] = buildMethod(fn), methods);
+each((fn, key) => Event[key] = buildMethod(fn), methods)
 
 module.exports = Event

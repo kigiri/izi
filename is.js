@@ -7,7 +7,7 @@ const _vTypes = {
 }
 
 const isFn = fn => typeof fn === 'function'
-const isArr = arr => arr && arr.constructor === Array
+const isArr = Array.isArray || (arr => arr && arr.constructor === Array)
 const isDef = val => val !== undefined
 const isNum = num => !isNaN(num) && typeof num === 'number'
 const isBool = b => b === true || b === false
@@ -15,7 +15,8 @@ const isObj = obj =>
   obj && (obj.constructor === Object || obj.constructor === undefined)
 const isStr = str => typeof str === 'string'
 const isUndef = val => val === undefined
-const isPromise = fn => fn && isFn(fn.then) && isFn(fn.catch)
+const isThennable = fn => fn && isFn(fn.then)
+const isPromise = fn => isThennable(fn) && isFn(fn.catch)
 const isChild = x => x && _vTypes[x.type]
 const isChildren = x => isStr(x) || isArr(x) || isChild(x)
 const isObserv = obs => isFn(obs) && isFn(obs.set)
@@ -24,7 +25,16 @@ const isHook = hook => hook &&
   (isFn(hook.hook) && !hook.hasOwnProperty("hook")
   || isFn(hook.unhook) && !hook.hasOwnProperty("unhook"))
 
-const isNode = isDef(window)
+const isPrimitive = prim => {
+  switch (typeof prim) {
+    case 'string':
+    case 'number':
+    case 'boolean': return true
+    default: return false
+  }
+}
+
+const isNode = typeof window !== 'undefined'
 const isFloat = (float => isNum(float) && Math.floor(float) !== float)
 const isInt = Number.isInteger || (int => isNum(int) && Math.floor(int) === int)
 
@@ -46,6 +56,8 @@ const is = {
   isObserv,
   isPromise,
   isChildren,
+  isPrimitive,
+  isThennable,
 }
 
 Object.keys(is).forEach(key => is[key.slice(2).toLowerCase()] = is[key])

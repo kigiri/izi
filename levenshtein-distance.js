@@ -22,6 +22,7 @@ module.exports = (a, b) => {
       if (b[i-1] == a[j-1]) {
         val = row[j-1] // match
       } else {
+        // two calls of Math.min is faster than pass 3 arguments (tested in v8)
         val = Math.min(row[j-1] + 1, // substitution
               Math.min(prev + 1,     // insertion
                        row[j] + 1))  // deletion

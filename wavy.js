@@ -1,12 +1,11 @@
 const { symlink, realpath } = require('./mz')('fs')
 const path = require('path')
 const map = require('./collection/map')
-const root = path.resolve(__dirname, '../')
-  // = dirname.slice(0, dirname.lastIndexOf('/node_modules/'));
+const root = __dirname.slice(0, __dirname.lastIndexOf('/node_modules/'))
 
 const wavy = map.toArr((l, s) => {
-  const link = path.resolve(root, l)
-  const source = path.resolve(root, 'node_modules', s)
+  const link = l[0] === '/' ? l : path.resolve(root, l)
+  const source = s[0] === '/' ? s : s.resolve(root, 'node_modules', s)
 
   return realpath(link)
     .then(real => {
