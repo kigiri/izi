@@ -1,12 +1,11 @@
 const flatten = require('./flatten')
 const filter = require('./collection/filter')
 const map = require('./collection/map')
+const { isFn, isThenable } = require('./is')
 
-const isFn = fn => typeof fn === 'function'
-const thennable = val => val && isFn(val.then)
 const filterFn = filter(isFn)
 const start = Promise.resolve()
-const toPromise = q => thenable(q) ? q : Promise.resolve(q)
+const toPromise = q => isThenable(q) ? q : Promise.resolve(q)
 const toBody = (i, str) => i > -1 ? `this[${i}](${toBody(i - 1, str)})` : str
 const execAll = map(fn => isFn(fn) ? fn() : fn)
 
@@ -15,7 +14,7 @@ const getBaseFn = size => fnCache[size]
   || (fnCache[size] = Function(['_'], 'return '+ toBody(size - 1, '_')))
 
 // encapsulate iterator state
-const counter = (max, n = -1) => () => ++n >= max ? undefined : n
+const counter = (max, n = 0) => () => n < max ? n++ : undefined
 
 // give it an array and it returns a function that iter through each values
 const poller = arr => {
@@ -34,15 +33,15 @@ const onlyFn = f => (...args) => {
 }
 
 // process the promises batch
-const getWorker = ({ fns, getNextKey, result }) => function worker() {
+const getWorker = ({ fns, getNextKey, result }) => (function worker() {
   const key = getNextKey()
-  if (!key) return
+  if (key === undefined) return
   const q = fns[key]()
 
-  return thennable(q)
+  return isThenable(q)
     ? q.then(val => worker(result[key] = val))
-    : worker(result[key] = val)
-}
+    : worker(result[key] = q)
+})()
 
 // this build the specifics tools for telling the worker
 // how to resolve and  
@@ -64,7 +63,7 @@ const prepWorker = fns => Array.isArray(fns)
 const serie = (fns, count) => {
   const prepData = prepWorker(fns)
 
-  if (!count || count < 2) return getWorker(prepData)
+  if (!count || count < 2) return toPromise(getWorker(prepData))
 
   const channels = Array(count)
   while (--count >= 0) {
@@ -122,7 +121,7 @@ const flow = onlyFn(fns => function() {
   console.log({fns})
   const exec = val => {
     while (++i < fns.length) {
-      if (thenable(val = fns[i](val))) return val.then(exec)
+      if (isThenable(val = fns[i](val))) return val.then(exec)
     }
     return val
   }
@@ -144,7 +143,7 @@ pipe.reverse = reverse(pipe)
 // Start a store chain
 const chain = ref => {
   if (!ref) return C({}, start)
-  if (thennable(ref)) return C({}, ref)
+  if (isThenable(ref)) return C({}, ref)
   if (isFn(ref) && isFn(ref.resolve)) return C({}, ref.resolve())
   const target = {}
   return C(target, objectPromiseAll(source, target))
@@ -168,7 +167,7 @@ module.exports = Object.assign(flow, {
   chain,
   serie,
   counter,
-  thennable,
+  isThenable,
   toPromise,
   delay: n => val => new Promise(s => setTimeout(() => s(val), n)),
 })

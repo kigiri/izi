@@ -26,7 +26,7 @@ const getText = el => {
 const mapGetText = map(getText)
 const getTextJoin = els => mapGetText(els).join('')
 
-const toTextStr = el => decode(getText(el)).trim()
+const toTextStr = el => el ? decode(getText(el)).trim() : ''
 const allToText = map(toTextStr)
 const toText = el => Array.isArray(el)
   ? allToText(el)

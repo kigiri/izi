@@ -15,8 +15,8 @@ const isObj = obj =>
   obj && (obj.constructor === Object || obj.constructor === undefined)
 const isStr = str => typeof str === 'string'
 const isUndef = val => val === undefined
-const isThennable = fn => fn && isFn(fn.then)
-const isPromise = fn => isThennable(fn) && isFn(fn.catch)
+const isThenable = fn => fn && isFn(fn.then)
+const isPromise = fn => isThenable(fn) && isFn(fn.catch)
 const isChild = x => x && _vTypes[x.type]
 const isChildren = x => isStr(x) || isArr(x) || isChild(x)
 const isObserv = obs => isFn(obs) && isFn(obs.set)
@@ -57,7 +57,7 @@ const is = {
   isPromise,
   isChildren,
   isPrimitive,
-  isThennable,
+  isThenable,
 }
 
 Object.keys(is).forEach(key => is[key.slice(2).toLowerCase()] = is[key])
