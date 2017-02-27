@@ -1,8 +1,7 @@
 const { isFn, isArr, isPrimitive, isObj } = require('../is')
 const sub = require('./subscribe')
 const each = require('../collection/each')
-const { isFn } = require('./is')
-const autoCurry = require('./auto-curry')
+const autoCurry = require('../auto-curry')
 
 let makeObserv, isObserv
 if (typeof Symbol === 'undefined') {

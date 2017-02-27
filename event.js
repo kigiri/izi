@@ -1,8 +1,8 @@
 const document = require('global/document')
 const window = require('global/window')
-const observ = require('izi/emiter/observ')
-const each = require('izi/collection/each')
-const loop = require('izi/loop')
+const observ = require('./emiter/observ')
+const each = require('./collection/each')
+const loop = require('./loop')
 
 const base = document.documentElement
 

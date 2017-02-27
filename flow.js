@@ -1,7 +1,7 @@
 const flatten = require('./flatten')
 const filter = require('./collection/filter')
 const map = require('./collection/map')
-const { isFn, isThenable } = require('./is')
+const { isStr, isFn, isThenable } = require('./is')
 
 const filterFn = filter(isFn)
 const start = Promise.resolve()
@@ -73,6 +73,8 @@ const serie = (fns, count) => {
   return Promise.all(channels).then(() => prepData.result)
 }
 
+serie.workers = count => fns => serie(fns, count)
+
 // Store chain recursive constructor
 const C = (store, ref) => ({
   then: (s, f) => C(store, ref.then(s, isFn(f) && (err => f(err, store)))),
@@ -118,7 +120,6 @@ const all = collection => {
 // Promise Composition
 const flow = onlyFn(fns => function() {
   let i = 0
-  console.log({fns})
   const exec = val => {
     while (++i < fns.length) {
       if (isThenable(val = fns[i](val))) return val.then(exec)
@@ -127,7 +128,8 @@ const flow = onlyFn(fns => function() {
   }
 
   try {
-    return toPromise(exec(fns[i].apply(null, arguments)))
+    const ret = fns[i].apply(null, arguments)
+    return isThenable(ret) ? ret.then(exec) : toPromise(exec(ret))
   } catch (err) {
     return Promise.reject(err)
   }
@@ -152,6 +154,7 @@ const chain = ref => {
 const stack = () => {
   let work = []
   const s = {
+    size: () => work.length,
     push: fn => (work.push(fn), s),
     clear: val => (work = [], val),
     exec: limit => (limit ? serie(work, limit) : Promise.all(execAll(work))),
@@ -160,9 +163,27 @@ const stack = () => {
   return s
 }
 
+const path = p => {
+  isStr(p) && (p = p.split('.'))
+  if (p.length === 1) {
+    p = p[0]
+    return res => res == null ? res : res[p]
+  }
+  return res => {
+    let i = -1
+    while (++i < p.length) {
+      if (res == null) return res
+      res = res[p[i]]
+    }
+    return res
+  }
+}
+
 module.exports = Object.assign(flow, {
   all,
   flow,
+  pipe,
+  path,
   stack,
   chain,
   serie,

@@ -9,7 +9,7 @@ const _vTypes = {
 const isFn = fn => typeof fn === 'function'
 const isArr = Array.isArray || (arr => arr && arr.constructor === Array)
 const isDef = val => val !== undefined
-const isNum = num => !isNaN(num) && typeof num === 'number'
+const isNum = num => typeof num === 'number' && !isNaN(num)
 const isBool = b => b === true || b === false
 const isObj = obj =>
   obj && (obj.constructor === Object || obj.constructor === undefined)

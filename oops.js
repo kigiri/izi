@@ -17,3 +17,4 @@ const oops = module.exports = code => {
 }
 
 module.exports[404] = module.exports.notFound = oops(404)
+
