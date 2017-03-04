@@ -19,6 +19,7 @@ const getHandler = key => {
   switch (key) {
     case 'class':
     case 'className': return mergeCssClass
+    case 'dataset':
     case 'style': return deepAssignAttr
     default: {
       if (key.indexOf('-') !== -1) return setAttr
@@ -65,6 +66,13 @@ Object.defineProperty(h, 'proxy', {
     get: (src, tag) => src[tag] || (src[tag] = h(tag)),
   })),
 })
+
+h.empty = el => {
+  if (!el) return
+  while (el.lastChild) {
+    el.removeChild(el.lastChild)
+  }
+}
 
 h.appendChild = appendChild
 
