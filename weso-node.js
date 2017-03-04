@@ -1,43 +1,54 @@
+const { isObj, isFn } = require('./is')
 const Ev = require('./emiter/event')
 const fs = require('fs')
-const signature = require('cookie-signature')
+const jwt = require('jsonwebtoken')
 const cookie = require('cookie')
 const initWeso = require('./weso')
+const uuid = require('./uuid')
 const uws = require('uws')
 const wsServer = uws.Server
 const wsSocket = uws.WebSocket
+
+const deleteSession = res => res.setHeader('Set-Cookie', [ `token=` ])
+const setSession = (res, data, secret, expiresIn='15d') => res
+  .setHeader('Set-Cookie', [ `token=${jwt.sign(data, secret, { expiresIn })}` ])
+
+const getOrInitSession = (req, res, data, secret, expiresIn) => {
+  const session = getcookie(req.headers.cookie, secret)
+  if (isObj(session)) return session
+
+  data.id || (data.id = uuid())
+  setSession(res, data, secret, expiresIn)
+  return data
+}
 
 const getcookie = (cookies, secret) => {
   if (!cookies) return
 
   // read from cookie header
-  const raw = cookie.parse(cookies)['connect.sid']
+  const { token } = cookie.parse(cookies)
 
-  if (!raw) return console.log('cookie not found')
-  if (raw.substr(0, 2) !== 's:') return console.log('cookie unsigned')
-
-  const val = signature.unsign(raw.slice(2), secret)
-
-  if (val === false) return console.log('cookie signature invalid')
-
-  return val
+  if (!token) return console.log('token cookie not found')
+  try { return jwt.verify(token, secret) }
+  catch (err) { return err.name }
 }
 
-// dummy request processing
-const processRequest = (req, res) => {
+const dummyRequestProcessing = (req, res) => {
   res.writeHead(200)
-  res.end("All glory to WebSockets!\n")
+  res.end('All glory to WebSockets!\n')
 }
 
 const init = opts => {
   const weso = initWeso(opts)
-  const server = (opts.secure
+  const processRequest = opts.processRequest || dummyRequestProcessing 
+  const port = opts.port || 7548
+  const server = opts.server || (opts.secure
     ? require('https').createServer({
         key: fs.readFileSync(opts.secure.key),
         cert: fs.readFileSync(opts.secure.cert),
       }, processRequest)
     : require('http').createServer(processRequest))
-    .listen(opts.port)
+    .listen(port, () => console.log(`Weso listening at port ${port}`))
 
   const wss = new wsServer({ server })
 
@@ -46,11 +57,17 @@ const init = opts => {
   const error = Ev()
 
   wss.on('connection', ws => {
-    const id = getcookie(ws.upgradeReq.headers.cookie, opts.secret)
-    if (!id) return ws.close(1337, 'Session not set')
+    const session = getcookie(ws.upgradeReq.headers.cookie, opts.secret)
+    if (!isObj(session)) {
+      if (opts.login) {
+        return ws.close(1337, session || 'Session is required')
+      }
+      ws.session = { id: ws.upgradeReq.headers['sec-websocket-key'] || uuid() }
+    } else {
+      ws.session = session
+    }
     // Foward message send by weso
     const clear = weso.listen(content => ws.send(content))
-    ws.id = id
     const wsObj = { ws }
     const assignWs = (val={}) => (val.ws = ws, val)
 
@@ -67,8 +84,8 @@ const init = opts => {
     // Cleanup on socket close
     ws.on('close', code => clear(close.broadcast({ code, ws })))
 
-    if (opts.login) {
-      opts.login(id).then(connect).catch(err => {
+    if (isFn(opts.login)) {
+      opts.login(ws.session.id).then(connect).catch(err => {
         console.log(err.message, 'closing websocket')
         ws.close(1999, 'No user found in the hell gate')
       })
@@ -78,10 +95,12 @@ const init = opts => {
   })
 
   weso.on = (eventType, fn) => weso[eventType](fn)
-
   weso.on.open = open.listen
   weso.on.close = close.listen
   weso.on.error = error.listen
+  weso.deleteSession = deleteSession
+  weso.getOrInitSession = (req, res, data={}) =>
+    getOrInitSession(req, res, data, opts.secret, opts.expiresIn)
 
   return weso
 }

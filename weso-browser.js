@@ -1,5 +1,4 @@
 const Ev = require('./emiter/event')
-const window = require('global/window')
 const initWeso = require('./weso')
 
 const getProtocol = secure => secure ? 'wss' : 'ws'
@@ -18,11 +17,9 @@ const prepareUrl = (secure, url, port) => {
 }
 
 const init = opts => {
-  if (!opts.url) throw Error('You need to specify a server url')
-
   const port = opts.port
   const retryDelay = opts.retryDelay
-  const url = prepareUrl(opts.secure, opts.url, opts.port)
+  const url = prepareUrl(opts.secure, opts.url || location.host, opts.port)
 
   const weso = initWeso(opts)
 
@@ -39,7 +36,9 @@ const init = opts => {
     const assignWs = (val={}) => (val.ws = ws, val)
 
     // Foward message send to weso
-    ws.onmessage = ({ data }) => weso.onmessage(data, ws)
+    ws.onmessage = ev => {
+      weso.onmessage(ev.data, ws)
+    }
 
     // Foward errors
     ws.onerror = err => error.broadcast(assignWs(err))
@@ -57,7 +56,6 @@ const init = opts => {
   }
 
   weso.on = (eventType, fn) => weso[eventType](fn)
-
   weso.on.open = open.listen
   weso.on.close = close.listen
   weso.on.error = error.listen

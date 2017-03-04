@@ -1,30 +1,17 @@
-const window = require('global/window')
-const _vTypes = {
-  VirtualText: true,
-  Thunk: true,
-  VirtualNode: true,
-  Widget: true,
-}
-
 const isFn = fn => typeof fn === 'function'
 const isArr = Array.isArray || (arr => arr && arr.constructor === Array)
 const isDef = val => val !== undefined
 const isNum = num => typeof num === 'number' && !isNaN(num)
 const isBool = b => b === true || b === false
-const isObj = obj =>
-  obj && (obj.constructor === Object || obj.constructor === undefined)
+const isObj = obj => obj && (typeof obj === 'object')
 const isStr = str => typeof str === 'string'
 const isUndef = val => val === undefined
 const isThenable = fn => fn && isFn(fn.then)
 const isPromise = fn => isThenable(fn) && isFn(fn.catch)
-const isChild = x => x && _vTypes[x.type]
-const isChildren = x => isStr(x) || isArr(x) || isChild(x)
+const isElement = x => x instanceof Element
+const isChildren = x => isStr(x) || isArr(x) || isElement(x)
 const isObserv = obs => isFn(obs) && isFn(obs.set)
 const isEvent = ev => isFn(ev.listen) && isFn(ev.broadcast)
-const isHook = hook => hook &&
-  (isFn(hook.hook) && !hook.hasOwnProperty("hook")
-  || isFn(hook.unhook) && !hook.hasOwnProperty("unhook"))
-
 const isPrimitive = prim => {
   switch (typeof prim) {
     case 'string':
@@ -50,11 +37,10 @@ const is = {
   isNode,
   isUndef,
   isFloat,
-  isChild,
-  isHook,
   isEvent,
   isObserv,
   isPromise,
+  isElement,
   isChildren,
   isPrimitive,
   isThenable,

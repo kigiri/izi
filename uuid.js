@@ -1,20 +1,14 @@
-const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_'
+const { safe64 } = require('./number-to-base')
+const rand = require('./rand')
+const _pad = '0000000000000000000000000000000'
+const pad = uuid => (uuid.length < 32)
+  ? _pad.slice(0, 32 - uuid.length) + uuid
+  : uuid
 
-const rand = (lower, upper) =>
-  lower + Math.floor(Math.random() * (upper - lower + 1))
-
-const base64 = (num, res='') => {
-  const mod = num % 64
-  const remaining = Math.floor(num / 64)
-  const c = chars[mod] + res
-
-  return (remaining <= 0) ? c : base64(remaining, c)
-}
-
-const min = Math.pow(64, 7)
 const max = Math.pow(64, 8)
+module.exports = () => pad(safe64(rand(max))
+  + safe64(rand(max))
+  + safe64(rand(max))
+  + safe64(rand(max)))
 
-module.exports = () => base64(rand(min, max))
-  + base64(rand(min, max))
-  + base64(rand(min, max))
-  + base64(rand(min, max))
+console.log(module.exports())

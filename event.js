@@ -1,5 +1,5 @@
-const document = require('global/document')
-const window = require('global/window')
+const window = require('./global')
+const document = window.document
 const observ = require('./emiter/observ')
 const each = require('./collection/each')
 const loop = require('./loop')

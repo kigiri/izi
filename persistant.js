@@ -1,4 +1,4 @@
-const store = require('global/window').localStorage
+const store = require('./global').localStorage
 
 const fallback = _ => _
 module.exports = (obs, key) => {

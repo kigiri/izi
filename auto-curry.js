@@ -21,12 +21,14 @@ const mergeArgs = (a, b) => {
   return args
 }
 
-module.exports = fn => {
-  const len = fn.length
+module.exports = (fn, ary) => {
+  ary || (ary = fn.length)
   function curryfier(args) {
-    return (args.length < len)
+    return (args.length < ary)
       ? function () { return curryfier(mergeArgs(args, arguments)) }
       : fn.apply(null, args)
   }
   return function () { return curryfier(arguments) }
 }
+
+module.exports.mergeArgs = mergeArgs

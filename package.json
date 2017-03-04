@@ -10,6 +10,7 @@
   "author": "Clément Denis <clement@payname.fr>",
   "license": "ISC",
   "dependencies": {
+    "cookie": "^0.3.1",
     "css-select": "^1.3.0-rc0",
     "domutils": "^1.5.1",
     "global": "^4.3.0",
@@ -17,10 +18,12 @@
     "htmlparser2": "^3.9.2",
     "inferno": "^1.3.0-rc.3",
     "inferno-create-element": "^1.3.0-rc.3",
+    "jsonwebtoken": "^7.3.0",
     "performance-now": "^0.2.0",
     "raf": "^3.2.0",
     "request": "^2.79.0",
-    "request-promise-native": "^1.0.3"
+    "request-promise-native": "^1.0.3",
+    "uws": "^0.13.0"
   },
   "devDependencies": {
     "ava": "^0.15.2",

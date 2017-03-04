@@ -1,17 +1,18 @@
 const flatten = require('./flatten')
 const filter = require('./collection/filter')
 const map = require('./collection/map')
+const curry = require('./auto-curry')
+const stupidMemo = require('./stupid-memo')
 const { isStr, isFn, isThenable } = require('./is')
 
 const filterFn = filter(isFn)
 const start = Promise.resolve()
 const toPromise = q => isThenable(q) ? q : Promise.resolve(q)
-const toBody = (i, str) => i > -1 ? `this[${i}](${toBody(i - 1, str)})` : str
+const toBody = (i, str) => i > 0 ? `this[${i}](${toBody(i - 1, str)})` : str
 const execAll = map(fn => isFn(fn) ? fn() : fn)
 
-const fnCache = Object.create(null)
-const getBaseFn = size => fnCache[size]
-  || (fnCache[size] = Function(['_'], 'return '+ toBody(size - 1, '_')))
+const getBaseFn = stupidMemo(size => 
+  Function([], 'return '+ toBody(size - 1, 'this[0].apply(null, arguments)')))
 
 // encapsulate iterator state
 const counter = (max, n = 0) => () => n < max ? n++ : undefined
@@ -64,6 +65,7 @@ const serie = (fns, count) => {
   const prepData = prepWorker(fns)
 
   if (!count || count < 2) return toPromise(getWorker(prepData))
+    .then(() => prepData.result)
 
   const channels = Array(count)
   while (--count >= 0) {
@@ -163,7 +165,7 @@ const stack = () => {
   return s
 }
 
-const path = p => {
+const path = stupidMemo(p => {
   isStr(p) && (p = p.split('.'))
   if (p.length === 1) {
     p = p[0]
@@ -177,18 +179,41 @@ const path = p => {
     }
     return res
   }
-}
+})
+
+const passFirst = (a, b) => isThenable(a) ? a.then(() => b) : b
+const passBoth = (a, b) => (isThenable(a) || isThenable(b))
+  ? Promise.all([ b, a ])
+  : [ b, a ]
+
+const hold = curry((fn, a) => passFirst(fn(a), a))
+hold.both = curry((fn, a) => passBoth(fn(a), a))
+hold.get = (p, ...fns) => hold(pipe(path(p), fns))
+hold.map = curry((fn1, fn2, a) => passBoth(fn1(a), fn2(a)))
 
 module.exports = Object.assign(flow, {
   all,
   flow,
   pipe,
   path,
+  hold,
   stack,
   chain,
   serie,
   counter,
   isThenable,
   toPromise,
+  execAll,
+  exec: (key, ...args) => (el, ...rest) => el[key](...args, ...rest),
+  noOp: () => {},
+  to1: a => a,
+  to2: (a, b) => b,
+  to3: (a, b, c) => c,
+  join: (...args) => args,
+  spread: fn => (...args) => fn(...flatten(args)),
+  spreadMap: fn => map((...args) => fn(...flatten(args))),
+  toN: n => (...args) => args[n+1],
+  lazy: fn => val => () => fn(val),
+  cook: (fn, ...args) => (...rest) => fn(...args, ...rest),
   delay: n => val => new Promise(s => setTimeout(() => s(val), n)),
 })
