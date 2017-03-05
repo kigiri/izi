@@ -10,6 +10,7 @@ const arrayOpts = {
 const filter = iter({
   arr: magic('arr', arrayOpts),
   obj: magic('obj', {
+    result: '{}',
     pre: ' ',
     post: '&& (result[key] = collection[key])',
   })
