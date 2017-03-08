@@ -7,4 +7,4 @@ const deepProxy = proxify(fn => typeof fn === 'function'
   ? (...args) => new Promise((s, f) => fn(...args, (e, r) => e ? f(e) : s(r)))
   : fn)
 
-module.exports = key => deepProxy(require(key))
+module.exports = mod => deepProxy(typeof mod === 'string' ? require(mod) : mod)

@@ -1,3 +1,4 @@
+
 module.exports = el => {
   if (!el) return
   if (typeof el.select === "function") return el.select()

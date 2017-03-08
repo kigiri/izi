@@ -67,13 +67,17 @@ Object.defineProperty(h, 'proxy', {
   })),
 })
 
-h.empty = el => {
+h.appendChild = appendChild
+const empty = h.empty = el => {
   if (!el) return
   while (el.lastChild) {
     el.removeChild(el.lastChild)
   }
 }
 
-h.appendChild = appendChild
+h.replaceContent = (el, content) => {
+  empty(el),
+  appendChild(el, content)
+}
 
 module.exports = h

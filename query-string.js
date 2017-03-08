@@ -16,11 +16,10 @@ const build = reduce((ret, param) => {
   return ret
 })
 
-module.exports = () => {
-  const str = (window.location.hash || window.location.search || '')
-    .split('?')[1]
+module.exports = (str) => {
+  str || (str = (location.hash || location.search || '').split('?')[1])
 
-  if (typeof str !== 'string' || !str) return {}
-
-  return build(str.split('&'), Object.create(null))
+  return (str && typeof str === 'string')
+    ? build(str.split('&'), Object.create(null))
+    : {}
 }
