@@ -5,21 +5,22 @@ const jwt = require('jsonwebtoken')
 const cookie = require('cookie')
 const initWeso = require('./weso')
 const uuid = require('./uuid')
-const uws = require('uws')
-const wsServer = uws.Server
-const wsSocket = uws.WebSocket
+const { Server: wsServer, WebSocket: wsSocket } = require('./ws')
 
 const deleteSession = res => res.setHeader('Set-Cookie', [ `token=` ])
 const setSession = (res, data, secret, expiresIn='15d') => res
   .setHeader('Set-Cookie', [ `token=${jwt.sign(data, secret, { expiresIn })}` ])
 
-const getOrInitSession = (req, res, data, secret, expiresIn) => {
-  const session = getcookie(req.headers.cookie, secret)
-  if (isObj(session)) return session
-
+const initSession = (res, data, secret, expiresIn) => {
   data.id || (data.id = uuid())
   setSession(res, data, secret, expiresIn)
   return data
+}
+
+const getOrInitSession = (req, res, data, secret, expiresIn) => {
+  const session = getcookie(req.headers.cookie, secret)
+  if (isObj(session)) return session
+  return initSession(res, data, secret, expiresIn)
 }
 
 const getcookie = (cookies, secret) => {
@@ -28,9 +29,9 @@ const getcookie = (cookies, secret) => {
   // read from cookie header
   const { token } = cookie.parse(cookies)
 
-  if (!token) return console.log('token cookie not found')
+  if (!token) return
   try { return jwt.verify(token, secret) }
-  catch (err) { return err.name }
+  catch (err) {}
 }
 
 const dummyRequestProcessing = (req, res) => {
@@ -58,9 +59,9 @@ const init = opts => {
 
   wss.on('connection', ws => {
     const session = getcookie(ws.upgradeReq.headers.cookie, opts.secret)
-    if (!isObj(session)) {
+    if (!session) {
       if (opts.login) {
-        return ws.close(1337, session || 'Session is required')
+        return ws.close(1337, 'Session is required')
       }
       ws.session = { id: ws.upgradeReq.headers['sec-websocket-key'] || uuid() }
     } else {
@@ -99,6 +100,14 @@ const init = opts => {
   weso.on.close = close.listen
   weso.on.error = error.listen
   weso.deleteSession = deleteSession
+  weso.getSession = req => getcookie(req.headers.cookie, opts.secret)
+
+  weso.setSession = (res, data) =>
+    setSession(res, data, opts.secret, opts.expiresIn)
+
+  weso.initSession = (res, data={}) => 
+    initSession(res, data, opts.secret, opts.expiresIn)
+
   weso.getOrInitSession = (req, res, data={}) =>
     getOrInitSession(req, res, data, opts.secret, opts.expiresIn)
 
