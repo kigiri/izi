@@ -10,5 +10,3 @@ module.exports = () => pad(safe64(rand(max))
   + safe64(rand(max))
   + safe64(rand(max))
   + safe64(rand(max)))
-
-console.log(module.exports())

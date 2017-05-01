@@ -1,37 +1,40 @@
 const { isObj, isFn } = require('./is')
 const Ev = require('./emiter/event')
 const fs = require('fs')
-const jwt = require('jsonwebtoken')
 const cookie = require('cookie')
+const signature = require('cookie-signature')
 const initWeso = require('./weso')
 const uuid = require('./uuid')
 const { Server: wsServer, WebSocket: wsSocket } = require('./ws')
 
-const deleteSession = res => res.setHeader('Set-Cookie', [ `token=` ])
-const setSession = (res, data, secret, expiresIn='15d') => res
-  .setHeader('Set-Cookie', [ `token=${jwt.sign(data, secret, { expiresIn })}` ])
+const deleteSession = res => res.setHeader('Set-Cookie', [ `connect.sid=` ])
+const setSession = (res, id, secret, maxAge) => res.setHeader('Set-Cookie',
+  cookie.serialize(`connect.sid`, signature.sign(id, secret), { maxAge }))
 
-const initSession = (res, data, secret, expiresIn) => {
-  data.id || (data.id = uuid())
-  setSession(res, data, secret, expiresIn)
-  return data
+const initSession = (res, secret, expiresIn) => {
+  const id = uuid()
+  setSession(res, id, secret, expiresIn)
+  return id
 }
 
-const getOrInitSession = (req, res, data, secret, expiresIn) => {
+const getOrInitSession = (req, res, secret, expiresIn) => {
   const session = getcookie(req.headers.cookie, secret)
   if (isObj(session)) return session
-  return initSession(res, data, secret, expiresIn)
+  return initSession(res, secret, expiresIn)
 }
 
 const getcookie = (cookies, secret) => {
   if (!cookies) return
 
   // read from cookie header
-  const { token } = cookie.parse(cookies)
+  const raw = cookie.parse(cookies)['connect.sid']
+  if (!raw) return //console.error('cookie not found')
+  if (raw.substr(0, 2) !== 's:') return //console.error('cookie unsigned')
 
-  if (!token) return
-  try { return jwt.verify(token, secret) }
-  catch (err) {}
+  const id = signature.unsign(raw.slice(2), secret)
+  if (id === false) return //console.error('cookie signature invalid')
+
+  return { id }
 }
 
 const dummyRequestProcessing = (req, res) => {
@@ -102,14 +105,11 @@ const init = opts => {
   weso.deleteSession = deleteSession
   weso.getSession = req => getcookie(req.headers.cookie, opts.secret)
 
-  weso.setSession = (res, data) =>
-    setSession(res, data, opts.secret, opts.expiresIn)
+  weso.initSession = res => 
+    initSession(res, opts.secret, opts.expiresIn)
 
-  weso.initSession = (res, data={}) => 
-    initSession(res, data, opts.secret, opts.expiresIn)
-
-  weso.getOrInitSession = (req, res, data={}) =>
-    getOrInitSession(req, res, data, opts.secret, opts.expiresIn)
+  weso.getOrInitSession = (req, res) =>
+    getOrInitSession(req, res, opts.secret, opts.expiresIn)
 
   return weso
 }

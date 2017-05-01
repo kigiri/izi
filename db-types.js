@@ -1,7 +1,6 @@
-const deburr = require('lodash/deburr')
+const deburr = require('./deburr')
 const is = require('./is')
 const rgx = require('./rgx')
-const i18n = require('../i18n')
 
 const toType = fn => (...args) => {
   const field = args[fn.length - 1] || (args[fn.length - 1] = {})

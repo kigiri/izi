@@ -17,9 +17,9 @@ const prepareUrl = (secure, url, port) => {
 }
 
 const init = opts => {
-  const port = opts.port
+  const port = opts.port || location.port
   const retryDelay = opts.retryDelay
-  const url = prepareUrl(opts.secure, opts.url || location.host, opts.port)
+  const url = prepareUrl(opts.secure, opts.url || location.hostname, port)
 
   const weso = initWeso(opts)
 

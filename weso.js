@@ -1,20 +1,5 @@
 'use strict'
 const Ev = require('./emiter/event')
-/*
-const through = _requi_re('through2')
-const streamCheck = stream => stream.pipe && stream.on
-const wesoStream = (weso, route, format, data) => {
-  if (streamCheck(data)) {
-    data.pipe(through((chunck, enc, next) => {
-      weso.broadcast(route + format(chunck))
-
-      next()
-    }))
-  }
-  else throw new Error('Need a stream')
-}
-
-*/
 
 const binary = { 
   isBinary: d => d == null || d instanceof ArrayBuffer || ArrayBuffer.isView(d),
@@ -91,16 +76,6 @@ module.exports = opts => {
     weso.publish[route] = d => weso.broadcast(append[route](d))
   }
 
-/*
-  for(const route of stream) {
-    checkRoute(weso, route)
-    const prefixedRoute = route +':'
-    const ev = Ev()
-    weso[route] = d => wesoStream(weso, prefixedRoute, formatContent, d)
-    broadcasters[route] = ev.broadcast
-    weso.streams[route] = ev.listen
-  }
-*/
   const retry = function () { weso.onmessage(this.result) }
   const binaryParser = (typeof Buffer === 'undefined')
     ? _ => _
