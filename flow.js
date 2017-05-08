@@ -10,6 +10,10 @@ const start = Promise.resolve()
 const toPromise = q => isThenable(q) ? q : Promise.resolve(q)
 const toBody = (i, str) => i > 0 ? `this[${i}](${toBody(i - 1, str)})` : str
 const execAll = map(fn => isFn(fn) ? fn() : fn)
+const chainHandlerSymbol = '@@chainHandler'
+const defaultHandler = (q, f) => q.then(f)
+const getHandler = f => f[chainHandlerSymbol] ? f : defaultHandler
+
 
 const getBaseFn = stupidMemo(size => 
   Function([], 'return '+ toBody(size - 1, 'this[0].apply(null, arguments)')))
@@ -119,12 +123,15 @@ const all = collection => {
   return objectPromiseAll(collection)
 }
 
+const chainType = f => isCatch(f) ? 'catch' : 'then'
+
 // Promise Composition
 const flow = onlyFn(fns => function() {
   let i = 0
   const exec = val => {
     while (++i < fns.length) {
-      if (isThenable(val = fns[i](val))) return val.then(exec)
+      if (isThenable(val = fns[i](val)))
+        return getHandler(fns[i + 1])(val, exec)
     }
     return val
   }
@@ -187,9 +194,13 @@ const passBoth = (a, b) => (isThenable(a) || isThenable(b))
   : [ b, a ]
 
 const hold = curry((fn, a) => passFirst(fn(a), a))
+const noOp = () => {}
 hold.both = curry((fn, a) => passBoth(fn(a), a))
 hold.get = (p, ...fns) => hold(pipe(path(p), fns))
 hold.map = curry((fn1, fn2, a) => passBoth(fn1(a), fn2(a)))
+
+const tagChainHandler = fn => (fn[chainHandlerSymbol] = true, fn)
+const catcher = (s, f, v) => { try { return s(v) } catch (e) { return f(e)} }
 
 module.exports = Object.assign(flow, {
   all,
@@ -197,23 +208,31 @@ module.exports = Object.assign(flow, {
   pipe,
   path,
   hold,
+  noOp,
   stack,
   chain,
   serie,
   counter,
-  isThenable,
-  toPromise,
   execAll,
-  exec: (key, ...args) => (el, ...rest) => el[key](...args, ...rest),
-  noOp: () => {},
+  toPromise,
+  isThenable,
   to1: a => a,
   to2: (a, b) => b,
   to3: (a, b, c) => c,
+  toN: n => (...args) => args[n+1],
+  catch: f => tagChainHandler(q => q.catch(f)),
+  then: (s, f) => tagChainHandler(q => q.then(s, f)),
+  exec: (key, ...args) => (el, ...rest) => el[key](...args, ...rest),
   join: (...args) => args,
+  return: a => () => a,
   spread: fn => (...args) => fn(...flatten(args)),
   spreadMap: fn => map((...args) => fn(...flatten(args))),
-  toN: n => (...args) => args[n+1],
   lazy: fn => val => () => fn(val),
   cook: (fn, ...args) => (...rest) => fn(...args, ...rest),
   delay: n => val => new Promise(s => setTimeout(() => s(val), n)),
+  try: (s, f) => isFn(f) ? v => catcher(s, f, v) : {
+    catch: handler => v => catcher(s, handler, v),
+    ignore: () => v => catcher(s, noOp, v),
+    or: fallbackValue => v => catcher(s, () => fallbackValue, v),
+  },
 })

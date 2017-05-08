@@ -22,7 +22,7 @@ const regular = {
   222: '\'',
 }
 
-const shifted = {
+const shifted = Object.assign({}, regular, {
   48: ')',
   49: '!',
   50: '@',
@@ -44,7 +44,7 @@ const shifted = {
   220: '|',
   221: '}',
   222: '"',
-}
+})
 
 const getAlias = (ev, which) => (ev.shiftKey ? shifted : regular)[which]
   || String.fromCharCode(which)
@@ -57,17 +57,14 @@ const applyMod = (ev, prev, fn) => fn
     || fn.none)
   : prev
 
-module.exports = (handlers, fallback) => {
-  return ev => {
-    let fn = handlers[ev.key.toLowerCase()]
-      || handlers[getAlias(ev, ev.which)]
+const noOp = () => {}
+module.exports = (handlers, fallback = noOp) => ev => {
+  let fn = handlers[ev.key.toLowerCase()] || handlers[getAlias(ev, ev.which)]
 
-    if (!fn && fallback) return fallback(ev)
-
-    fn = applyMod(ev, fn, fn)
-
-    if (isFn(fn)) {
-      if (fn(ev) !== false) ev.preventDefault()
-    } else return fallback(ev)
-  }
+  if (!fn) return fallback(ev)
+  fn = applyMod(ev, fn, fn)
+  if (!isFn(fn)) return fallback(ev)
+  if (fn(ev) !== false) ev.preventDefault()
 }
+
+

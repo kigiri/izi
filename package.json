@@ -14,7 +14,7 @@
     "cookie-signature": "^1.0.6",
     "global": "^4.3.0",
     "performance-now": "^0.2.0",
-    "raf": "^3.2.0"
+    "raf": "^3.3.0"
   },
   "devDependencies": {
     "ava": "^0.15.2",

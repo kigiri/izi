@@ -1,6 +1,6 @@
 const store = require('./store')
 const { isArr, isObj } = require('../is')
-const H = Object.create.bind(Object, null)
+const H = () => Object.create(null)
 const cloneDeep = store((src, value, key) => isObj(value)
   ? cloneDeep(value, src[key] || (src[key] = H()))
   : src[key] = value)

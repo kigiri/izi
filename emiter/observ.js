@@ -29,6 +29,21 @@ const observ = value => {
   return makeObserv(subscriber)
 }
 
+const observDiff = value => {
+  let prevValue
+  const listeners = []
+  const subscriber = fn => sub(listeners, fn, value)
+  const sendValue = each(fn => fn(value, prevValue))
+
+  subscriber.set = val => {
+    prevValue = value
+    value = val
+    sendValue(listeners)
+  }
+
+  return makeObserv(subscriber)
+}
+
 const defaultCheck = (a, b) => a !== b
 const observCheck = (value, check = defaultCheck) => {
   const listeners = []
@@ -190,6 +205,7 @@ observ.once = observOnce
 observ.from = toObserv
 observ.isObserv = isObserv
 observ.arr = observArray
+observ.diff = observDiff
 
 observ.map = autoCurry((fn, obs) => {
   const newObs = observ(fn(obs()))

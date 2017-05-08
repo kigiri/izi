@@ -6,9 +6,11 @@ const remove = require('./arr').remove
 
 const loop = ev()
 const after = ev()
+const before = ev()
 const often = ev()
 
 raf((prevT => function recur(t) {
+  before.broadcast(t)
   loop.broadcast(t)
   after.broadcast(t)
   if (t - prevT > 500) {
@@ -18,6 +20,8 @@ raf((prevT => function recur(t) {
   raf(recur)
 })(0))
 
+// loop.before should never be used to morph the dom
+loop.listen.before = before.listen
 loop.listen.after = after.listen
 loop.listen.often = often.listen // triggered every 500ms
 

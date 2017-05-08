@@ -89,7 +89,7 @@ if (window.addEventListener) {
     }
   })
   updateDom()
-  loop(updateDom)
+  loop.before(updateDom)
 }
 
 module.exports = {
