@@ -4,7 +4,7 @@ const map = require('./collection/map')
 
 module.exports = (def, root) => {
   root || (root = __dirname.slice(0, __dirname.lastIndexOf('/node_modules/')))
-  const wavy = map.toArr((l, s) => {
+  return Promise.all(map.toArr((l, s) => {
     const link = l[0] === '/' ? l : path.resolve(root, l)
     const source = s[0] === '/' ? s : path.resolve(root, 'node_modules', s)
 
@@ -17,7 +17,6 @@ module.exports = (def, root) => {
         if (err.code === 'EEXIST') return logOutput()
         throw err
       })
-  })
-  return Promise.all(wavy(def))
+  }, def))
 }
 

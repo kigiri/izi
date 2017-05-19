@@ -59,16 +59,20 @@ const uid = toType((size, field) => pushTest(field, [
 ]))
 
 const char = (min, max, field) => {
-  if (!max) {
-    field = {}
-    max = min
-  } else if (is.obj(max)) {
+  if (is.obj(max)) {
     field = max
     max = min
+    min = 0
+  } else if (!max) {
+    field = {}
+    max = min
+    min = 0
   } else if (!field) {
     field = {}
   }
 
+
+  console.log({ min, max })
   field.sql = `${min === max ? 'CHAR' : 'VARCHAR'}(${max})`
 
   pushTest(field, [
