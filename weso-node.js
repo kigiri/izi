@@ -8,13 +8,14 @@ const uuid = require('./uuid')
 const { Server: wsServer, WebSocket: wsSocket } = require('./ws')
 
 const deleteSession = res => res.setHeader('Set-Cookie', [ `connect.sid=` ])
-const setSession = (res, id, secret, maxAge) => res.setHeader('Set-Cookie',
-  cookie.serialize(`connect.sid`, signature.sign(id, secret), { maxAge }))
 
-const initSession = (res, secret, expiresIn) => {
-  const id = uuid()
-  setSession(res, id, secret, expiresIn)
-  return id
+const initSession = (res, secret, expiresIn, payload = {}) => {
+  payload.id || (payload.id = uuid())
+  payload.expiresIn = expiresIn
+
+  const signedPayload = signature.sign(JSON.stringify(payload), secret)
+  res.setHeader('Set-Cookie', cookie.serialize(`connect.sid`, signedPayload))
+  return payload.id
 }
 
 const getOrInitSession = (req, res, secret, expiresIn) => {
@@ -26,15 +27,20 @@ const getOrInitSession = (req, res, secret, expiresIn) => {
 const getcookie = (cookies, secret) => {
   if (!cookies) return
 
-  // read from cookie header
-  const raw = cookie.parse(cookies)['connect.sid']
-  if (!raw) return //console.error('cookie not found')
-  if (raw.substr(0, 2) !== 's:') return //console.error('cookie unsigned')
+  try {
+    // read from cookie header
+    const raw = cookie.parse(cookies)['connect.sid']
+    if (!raw) return //console.error('cookie not found')
+    if (raw.substr(0, 2) !== 's:') return //console.error('cookie unsigned')
 
-  const id = signature.unsign(raw.slice(2), secret)
-  if (id === false) return //console.error('cookie signature invalid')
+    const payload = signature.unsign(raw.slice(2), secret)
+    if (payload === false) return //console.error('cookie signature invalid')
 
-  return { id }
+    return JSON.parse(Buffer(payload, 'base64').toString())
+  } catch (err) {
+    console.log('error parsing cookie', err)
+    return
+  }
 }
 
 const dummyRequestProcessing = (req, res) => {
@@ -63,7 +69,7 @@ const init = opts => {
   wss.on('connection', ws => {
     const session = getcookie(ws.upgradeReq.headers.cookie, opts.secret)
     if (!session) {
-      if (opts.login) {
+      if (opts.login && opts.loginRequired) {
         return ws.close(1337, 'Session is required')
       }
       ws.session = { id: ws.upgradeReq.headers['sec-websocket-key'] || uuid() }
@@ -73,11 +79,11 @@ const init = opts => {
     // Foward message send by weso
     const clear = weso.listen(content => ws.send(content))
     const wsObj = { ws }
-    const assignWs = (val={}) => (val.ws = ws, val)
+    const assignWs = (val = {}) => (val.ws = ws, val)
 
     const connect = user => {
-      weso.link(ws)
       ws.user = user
+      weso.link(ws)
       ws.on('message', data => weso.onmessage(data, ws))
       open.broadcast(ws)
     }
@@ -88,14 +94,12 @@ const init = opts => {
     // Cleanup on socket close
     ws.on('close', code => clear(close.broadcast({ code, ws })))
 
-    if (isFn(opts.login)) {
-      opts.login(ws.session.id).then(connect).catch(err => {
-        console.log(err.message, 'closing websocket')
-        ws.close(1999, 'No user found in the hell gate')
-      })
-    } else {
-      connect()
-    }
+    if (!isFn(opts.login)) return connect()
+    opts.login(ws.session).then(connect).catch(err => {
+      if (!opts.loginRequired) return connect()
+      console.log(err.message, 'closing websocket')
+      ws.close(1999, 'No user found in the hell gate')
+    })
   })
 
   weso.on = (eventType, fn) => weso[eventType](fn)
@@ -122,6 +126,7 @@ module.exports = init
   url: (required, ex: 'host.domain.com')
   port: 7266 (default, optional)
   secret: 'pass phrase', // to decode the cookie
+  loginRequired: true,
   login: id => db.user.getOne({ id }),
   secure: {
     key: '/path/to/you/ssl.key',

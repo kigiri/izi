@@ -71,8 +71,6 @@ const char = (min, max, field) => {
     field = {}
   }
 
-
-  console.log({ min, max })
   field.sql = `${min === max ? 'CHAR' : 'VARCHAR'}(${max})`
 
   pushTest(field, [
